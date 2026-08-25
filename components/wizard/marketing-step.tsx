@@ -27,14 +27,17 @@ export function MarketingStep({
       {value.benefits.map((benefit, index) => {
         const error = errors[`benefits.${index}`];
         const errorId = `benefit-${index + 1}-error`;
+        const describedBy = [error ? errorId : null, errors.benefits ? "benefits-error" : null]
+          .filter(Boolean)
+          .join(" ");
         return (
           <label key={index} className="block text-sm font-medium text-zinc-800">
             卖点 {index + 1}
             <input
               value={benefit}
               onChange={(event) => onBenefitChange(index as 0 | 1 | 2, event.target.value)}
-              aria-invalid={Boolean(error)}
-              aria-describedby={error ? errorId : undefined}
+              aria-invalid={Boolean(error || errors.benefits)}
+              aria-describedby={describedBy || undefined}
               className="mt-2 w-full rounded-md border border-zinc-300 px-3 py-2"
             />
             {error ? (
@@ -45,6 +48,12 @@ export function MarketingStep({
           </label>
         );
       })}
+
+      {errors.benefits ? (
+        <p id="benefits-error" className="text-sm text-red-600">
+          {errors.benefits}
+        </p>
+      ) : null}
 
       <label className="block text-sm font-medium text-zinc-800">
         价格

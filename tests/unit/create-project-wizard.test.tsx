@@ -1,6 +1,8 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import TemplateDetailPage from "@/app/templates/[slug]/page";
 import { CreateProjectWizard } from "@/components/wizard/create-project-wizard";
+import { DirectionStep } from "@/components/wizard/direction-step";
+import { MarketingStep } from "@/components/wizard/marketing-step";
 import { getPublishedTemplate } from "@/lib/templates/get-template";
 
 const { notFound, push } = vi.hoisted(() => ({ notFound: vi.fn(), push: vi.fn() }));
@@ -61,6 +63,62 @@ test("starts on the accessible product step", () => {
   expect(screen.getByText("第 1 步，共 3 步")).toBeInTheDocument();
   expect(screen.getByRole("heading", { name: "商品信息" })).toBeInTheDocument();
   expect(screen.getByLabelText("商品名称")).toBeInTheDocument();
+});
+
+test("shows and associates a root benefits error with every benefit input", () => {
+  render(
+    <MarketingStep
+      value={{
+        benefits: ["轻巧", "保温", "耐用"],
+        price: "",
+        promotion: "",
+        brandName: "",
+      }}
+      errors={{ benefits: "请填写恰好三个卖点" }}
+      onBenefitChange={vi.fn()}
+      onChange={vi.fn()}
+    />,
+  );
+
+  expect(screen.getByText("请填写恰好三个卖点")).toHaveAttribute("id", "benefits-error");
+  for (const label of ["卖点 1", "卖点 2", "卖点 3"]) {
+    expect(screen.getByLabelText(label)).toHaveAttribute("aria-invalid", "true");
+    expect(screen.getByLabelText(label)).toHaveAttribute("aria-describedby", "benefits-error");
+  }
+});
+
+test("shows and associates style and candidate count errors", () => {
+  render(
+    <DirectionStep
+      value={{
+        style: "MINIMAL",
+        scene: "办公桌",
+        primaryColor: "#112233",
+        candidateCount: 1,
+      }}
+      errors={{
+        style: "请选择简约、生活方式或高端质感风格",
+        candidateCount: "候选数量必须为 1、2 或 4",
+      }}
+      onChange={vi.fn()}
+    />,
+  );
+
+  const style = screen.getByRole("combobox", { name: "视觉风格" });
+  expect(style).toHaveAttribute("aria-invalid", "true");
+  expect(style).toHaveAttribute("aria-describedby", "direction-style-error");
+  expect(screen.getByText("请选择简约、生活方式或高端质感风格")).toHaveAttribute(
+    "id",
+    "direction-style-error",
+  );
+
+  const candidate = screen.getByRole("radio", { name: "1 个候选" });
+  expect(candidate).toHaveAttribute("aria-invalid", "true");
+  expect(candidate).toHaveAttribute("aria-describedby", "direction-candidate-count-error");
+  expect(screen.getByText("候选数量必须为 1、2 或 4")).toHaveAttribute(
+    "id",
+    "direction-candidate-count-error",
+  );
 });
 
 test("renders the wizard with the published template version when create mode is requested", async () => {

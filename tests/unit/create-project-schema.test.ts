@@ -31,6 +31,23 @@ test("rejects an invalid image URL and a benefits list that is not exactly three
   expect(result.success).toBe(false);
 });
 
+test.each<Array<[unknown, string]>>([
+  [["轻巧", "保温"], "请填写恰好三个卖点"],
+  ["轻巧、保温、耐用", "三个卖点必须使用列表格式"],
+])("returns a Chinese error for invalid benefits %j", (benefits, expectedMessage) => {
+  const result = createProjectSchema.safeParse({
+    ...validInput,
+    marketing: { ...validInput.marketing, benefits },
+  });
+
+  expect(result.success).toBe(false);
+  if (!result.success) {
+    expect(
+      result.error.issues.find((issue) => issue.path.join(".") === "marketing.benefits")?.message,
+    ).toBe(expectedMessage);
+  }
+});
+
 test("accepts complete input, trims required text, and preserves the three-item benefits tuple", () => {
   const result = createProjectSchema.parse(validInput);
 
@@ -85,6 +102,23 @@ test.each([0, 3, 5])("rejects unsupported candidate count %s", (candidateCount) 
       direction: { ...validInput.direction, candidateCount },
     }).success,
   ).toBe(false);
+});
+
+test.each<Array<[string, Record<string, unknown>, string]>>([
+  ["direction.style", { style: "EDITORIAL" }, "请选择简约、生活方式或高端质感风格"],
+  ["direction.candidateCount", { candidateCount: 3 }, "候选数量必须为 1、2 或 4"],
+])("returns a Chinese error for invalid %s", (path, directionOverride, expectedMessage) => {
+  const result = createProjectSchema.safeParse({
+    ...validInput,
+    direction: { ...validInput.direction, ...directionOverride },
+  });
+
+  expect(result.success).toBe(false);
+  if (!result.success) {
+    expect(result.error.issues.find((issue) => issue.path.join(".") === path)?.message).toBe(
+      expectedMessage,
+    );
+  }
 });
 
 test("normalizes empty optional marketing fields to undefined", () => {

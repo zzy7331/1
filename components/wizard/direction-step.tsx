@@ -22,12 +22,19 @@ export function DirectionStep({ value, errors, onChange }: DirectionStepProps) {
           onChange={(event) =>
             onChange("style", event.target.value as CreateProjectInput["direction"]["style"])
           }
+          aria-invalid={Boolean(errors.style)}
+          aria-describedby={errors.style ? "direction-style-error" : undefined}
           className="mt-2 w-full rounded-md border border-zinc-300 px-3 py-2"
         >
           <option value="MINIMAL">简约</option>
           <option value="LIFESTYLE">生活方式</option>
           <option value="PREMIUM">高端质感</option>
         </select>
+        {errors.style ? (
+          <span id="direction-style-error" className="mt-1 block text-sm text-red-600">
+            {errors.style}
+          </span>
+        ) : null}
       </label>
 
       <label className="block text-sm font-medium text-zinc-800">
@@ -63,7 +70,7 @@ export function DirectionStep({ value, errors, onChange }: DirectionStepProps) {
         ) : null}
       </label>
 
-      <fieldset>
+      <fieldset aria-describedby={errors.candidateCount ? "direction-candidate-count-error" : undefined}>
         <legend className="text-sm font-medium text-zinc-800">候选数量</legend>
         <div className="mt-2 flex flex-wrap gap-4">
           {([1, 2, 4] as const).map((count) => (
@@ -74,11 +81,20 @@ export function DirectionStep({ value, errors, onChange }: DirectionStepProps) {
                 value={count}
                 checked={value.candidateCount === count}
                 onChange={() => onChange("candidateCount", count)}
+                aria-invalid={Boolean(errors.candidateCount)}
+                aria-describedby={
+                  errors.candidateCount ? "direction-candidate-count-error" : undefined
+                }
               />
               {count} 个候选
             </label>
           ))}
         </div>
+        {errors.candidateCount ? (
+          <p id="direction-candidate-count-error" className="mt-1 text-sm text-red-600">
+            {errors.candidateCount}
+          </p>
+        ) : null}
       </fieldset>
     </section>
   );
