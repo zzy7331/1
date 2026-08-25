@@ -18,6 +18,8 @@ const workflowDefinition = {
     { key: "marketing", name: "营销卖点" },
     { key: "direction", name: "视觉方向" },
   ],
+  estimatedMinutes: 5,
+  versionRequirement: "专业版",
 };
 
 const boardDefinition = [
@@ -83,14 +85,14 @@ export async function seedOfficialTemplate() {
     update: {
       name: "通用商品上新套装",
       description: "一次生成五张营销素材",
-      coverUrl: "/templates/general-product-launch.webp",
+      coverUrl: "/templates/general-product-launch.svg",
       status: TemplateStatus.PUBLISHED,
     },
     create: {
       slug: "general-product-launch",
       name: "通用商品上新套装",
       description: "一次生成五张营销素材",
-      coverUrl: "/templates/general-product-launch.webp",
+      coverUrl: "/templates/general-product-launch.svg",
       status: TemplateStatus.PUBLISHED,
     },
   });

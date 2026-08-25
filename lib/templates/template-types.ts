@@ -19,8 +19,15 @@ export type WorkflowStep = {
   name: string;
 };
 
+export type TemplateBoardKind =
+  | "HERO_WHITE"
+  | "SCENE"
+  | "BENEFITS"
+  | "PROMOTION"
+  | "SOCIAL_SQUARE";
+
 export type TemplateBoard = {
-  kind: string;
+  kind: TemplateBoardKind;
   name: string;
   width: number;
   height: number;
