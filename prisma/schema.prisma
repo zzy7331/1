@@ -1,0 +1,124 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum TemplateStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum ProjectStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
+
+enum VariableType {
+  STRING
+  STRING_LIST
+  NUMBER
+  BOOLEAN
+  JSON
+}
+
+enum AssetKind {
+  PRODUCT_IMAGE
+  LOGO
+  REFERENCE_IMAGE
+}
+
+enum BoardKind {
+  HERO_WHITE
+  SCENE
+  BENEFITS
+  PROMOTION
+  SOCIAL_SQUARE
+}
+
+model Template {
+  id          String         @id @default(cuid())
+  slug        String         @unique
+  name        String
+  description String
+  coverUrl    String
+  status      TemplateStatus @default(DRAFT)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  versions    TemplateVersion[]
+}
+
+model TemplateVersion {
+  id                 String   @id @default(cuid())
+  templateId         String
+  version            Int
+  formDefinition     Json
+  workflowDefinition Json
+  boardDefinition    Json
+  brandRules         Json
+  exportRules        Json
+  createdAt          DateTime @default(now())
+  template           Template @relation(fields: [templateId], references: [id])
+  projects           Project[]
+
+  @@unique([templateId, version])
+}
+
+model Project {
+  id                String        @id @default(cuid())
+  templateVersionId String
+  name              String
+  status            ProjectStatus @default(DRAFT)
+  templateSnapshot  Json
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  templateVersion   TemplateVersion @relation(fields: [templateVersionId], references: [id])
+  variables         ProjectVariable[]
+  assets            Asset[]
+  boards            Board[]
+}
+
+model ProjectVariable {
+  id        String       @id @default(cuid())
+  projectId String
+  key       String
+  type      VariableType
+  value     Json
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  project   Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, key])
+}
+
+model Asset {
+  id                   String    @id @default(cuid())
+  projectId            String
+  kind                 AssetKind
+  sourceUrl            String
+  processedUrl         String?
+  protectionDefinition Json
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  project              Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+model Board {
+  id        String    @id @default(cuid())
+  projectId String
+  kind      BoardKind
+  name      String
+  width     Int
+  height    Int
+  positionX Int
+  positionY Int
+  layers    Json
+  project   Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, kind])
+}
