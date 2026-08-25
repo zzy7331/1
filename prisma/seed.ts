@@ -1,4 +1,5 @@
 import { PrismaClient, TemplateStatus } from "@prisma/client";
+import { pathToFileURL } from "node:url";
 
 const prisma = new PrismaClient();
 
@@ -76,7 +77,7 @@ const exportRules = {
   quality: "high",
 };
 
-async function main() {
+export async function seedOfficialTemplate() {
   const template = await prisma.template.upsert({
     where: { slug: "general-product-launch" },
     update: {
@@ -94,31 +95,32 @@ async function main() {
     },
   });
 
-  await prisma.templateVersion.upsert({
-    where: {
-      templateId_version: {
+  const existingVersion = await prisma.templateVersion.findUnique({
+    where: { templateId_version: { templateId: template.id, version: 1 } },
+  });
+
+  if (!existingVersion) {
+    await prisma.templateVersion.create({
+      data: {
         templateId: template.id,
         version: 1,
+        formDefinition,
+        workflowDefinition,
+        boardDefinition,
+        brandRules,
+        exportRules,
       },
-    },
-    update: {},
-    create: {
-      templateId: template.id,
-      version: 1,
-      formDefinition,
-      workflowDefinition,
-      boardDefinition,
-      brandRules,
-      exportRules,
-    },
-  });
+    });
+  }
 }
 
-main()
-  .catch((error: unknown) => {
-    console.error(error);
-    process.exitCode = 1;
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  seedOfficialTemplate()
+    .catch((error: unknown) => {
+      console.error(error);
+      process.exitCode = 1;
+    })
+    .finally(async () => {
+      await prisma.$disconnect();
+    });
+}
