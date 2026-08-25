@@ -1,19 +1,36 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { CreateProjectWizard } from "@/components/wizard/create-project-wizard";
 import { getPublishedTemplate } from "@/lib/templates/get-template";
 
 export const dynamic = "force-dynamic";
 
 type TemplateDetailPageProps = {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ create?: string | string[] }>;
 };
 
-export default async function TemplateDetailPage({ params }: TemplateDetailPageProps) {
-  const { slug } = await params;
+export default async function TemplateDetailPage({ params, searchParams }: TemplateDetailPageProps) {
+  const [{ slug }, query] = await Promise.all([params, searchParams]);
   const template = await getPublishedTemplate(slug);
 
   if (!template) {
     notFound();
+  }
+
+  if (query.create === "1") {
+    return (
+      <main className="mx-auto max-w-2xl px-6 py-12">
+        <Link href={`/templates/${template.slug}`} className="text-sm font-medium text-zinc-600">
+          返回模板详情
+        </Link>
+        <h1 className="mt-4 text-3xl font-semibold tracking-tight text-zinc-900">
+          创建{template.name}
+        </h1>
+        <p className="mt-2 text-zinc-600">填写三步信息，生成完整的营销素材项目。</p>
+        <CreateProjectWizard templateVersionId={template.templateVersionId} />
+      </main>
+    );
   }
 
   return (
