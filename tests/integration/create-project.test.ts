@@ -7,6 +7,55 @@ import * as projectService from "@/lib/projects/create-project";
 import type { Prisma, TemplateStatus } from "@prisma/client";
 
 const createdProjectIds: string[] = [];
+let officialTemplateId = "";
+
+const expectedBoardDefinitions = [
+  {
+    kind: "HERO_WHITE",
+    name: "白底主图",
+    width: 1000,
+    height: 1000,
+    positionX: 0,
+    positionY: 0,
+    layers: [{ type: "product", name: "商品主体" }],
+  },
+  {
+    kind: "SCENE",
+    name: "场景图",
+    width: 1000,
+    height: 1000,
+    positionX: 1120,
+    positionY: 0,
+    layers: [{ type: "scene", name: "商品使用场景" }],
+  },
+  {
+    kind: "BENEFITS",
+    name: "三卖点图",
+    width: 1000,
+    height: 1200,
+    positionX: 2240,
+    positionY: 0,
+    layers: [{ type: "benefits", name: "核心卖点" }],
+  },
+  {
+    kind: "PROMOTION",
+    name: "促销海报",
+    width: 1080,
+    height: 1440,
+    positionX: 3360,
+    positionY: 0,
+    layers: [{ type: "promotion", name: "优惠信息" }],
+  },
+  {
+    kind: "SOCIAL_SQUARE",
+    name: "社媒方图",
+    width: 1080,
+    height: 1080,
+    positionX: 4560,
+    positionY: 0,
+    layers: [{ type: "social", name: "社媒标题" }],
+  },
+];
 
 const validInput = {
   templateVersionId: "",
@@ -82,8 +131,10 @@ beforeAll(async () => {
   await seedOfficialTemplate();
   const version = await prisma.templateVersion.findFirstOrThrow({
     where: { template: { slug: "general-product-launch" }, version: 1 },
+    include: { template: true },
   });
   validInput.templateVersionId = version.id;
+  officialTemplateId = version.template.id;
 });
 
 afterEach(async () => {
@@ -112,15 +163,58 @@ test("creates a versioned project with typed input, protected source asset, and 
   const stored = await prisma.project.findUnique({
     where: { id: project.id },
     include: {
-      variables: { where: { key: "product.name" } },
+      variables: true,
       assets: true,
       boards: { orderBy: { positionX: "asc" } },
     },
   });
 
-  expect(stored?.templateSnapshot).toBeTruthy();
-  expect(stored?.variables).toEqual([
-    expect.objectContaining({ key: "product.name", type: "STRING", value: "咖啡机" }),
+  expect(stored?.templateSnapshot).toEqual({
+    templateId: officialTemplateId,
+    templateSlug: "general-product-launch",
+    templateName: "通用商品上新套装",
+    templateVersionId: validInput.templateVersionId,
+    version: 1,
+    formDefinition: {
+      title: "通用商品上新素材",
+      fields: [
+        { key: "product.name", label: "商品名称", type: "text", required: true },
+        { key: "product.category", label: "商品类目", type: "text", required: true },
+        { key: "product.sourceImageUrl", label: "商品图片", type: "url", required: true },
+      ],
+    },
+    workflowDefinition: {
+      steps: [
+        { key: "product", name: "商品信息" },
+        { key: "marketing", name: "营销卖点" },
+        { key: "direction", name: "视觉方向" },
+      ],
+      estimatedMinutes: 5,
+      versionRequirement: "专业版",
+    },
+    boardDefinition: expectedBoardDefinitions,
+    brandRules: {
+      protectedAttributes: ["商品轮廓", "品牌标识", "包装文字", "主色", "结构细节"],
+    },
+    exportRules: { formats: ["png", "jpg"], quality: "high" },
+  });
+  expect(
+    stored?.variables
+      .map(({ key, type, value }) => ({ key, type, value }))
+      .sort((left, right) => left.key.localeCompare(right.key)),
+  ).toEqual([
+    { key: "direction.candidateCount", type: "NUMBER", value: 4 },
+    { key: "direction.primaryColor", type: "STRING", value: "#6B4F3A" },
+    { key: "direction.scene", type: "STRING", value: "晨间厨房" },
+    { key: "direction.style", type: "STRING", value: "PREMIUM" },
+    { key: "marketing.benefit.1", type: "STRING", value: "一键萃取" },
+    { key: "marketing.benefit.2", type: "STRING", value: "恒温冲煮" },
+    { key: "marketing.benefit.3", type: "STRING", value: "自动清洁" },
+    { key: "marketing.brandName", type: "STRING", value: "晨雾" },
+    { key: "marketing.price", type: "STRING", value: "899 元" },
+    { key: "marketing.promotion", type: "STRING", value: "新品九折" },
+    { key: "product.category", type: "STRING", value: "厨房电器" },
+    { key: "product.name", type: "STRING", value: "咖啡机" },
   ]);
   expect(stored?.assets).toEqual([
     expect.objectContaining({
@@ -135,7 +229,50 @@ test("creates a versioned project with typed input, protected source asset, and 
       },
     }),
   ]);
-  expect(stored?.boards).toHaveLength(5);
+  expect(
+    stored?.boards.map(
+      ({ kind, name, width, height, positionX, positionY, layers }) => ({
+        kind,
+        name,
+        width,
+        height,
+        positionX,
+        positionY,
+        layers,
+      }),
+    ),
+  ).toEqual(expectedBoardDefinitions);
+});
+
+test("does not create variables for optional marketing fields that are undefined", async () => {
+  const project = await createProject({
+    ...validInput,
+    marketing: {
+      benefits: validInput.marketing.benefits,
+      price: undefined,
+      promotion: undefined,
+      brandName: undefined,
+    },
+  });
+  createdProjectIds.push(project.id);
+
+  const variables = await prisma.projectVariable.findMany({
+    where: { projectId: project.id },
+    orderBy: { key: "asc" },
+    select: { key: true },
+  });
+
+  expect(variables.map(({ key }) => key)).toEqual([
+    "direction.candidateCount",
+    "direction.primaryColor",
+    "direction.scene",
+    "direction.style",
+    "marketing.benefit.1",
+    "marketing.benefit.2",
+    "marketing.benefit.3",
+    "product.category",
+    "product.name",
+  ]);
 });
 
 test("rejects a missing template version without creating a partial project", async () => {
@@ -189,6 +326,24 @@ test("returns a serializable Chinese field error when four benefits are submitte
   expect(response.status).toBe(400);
   expect(body.code).toBe("INVALID_INPUT");
   expect(JSON.stringify(body.fieldErrors)).toContain("请填写恰好三个卖点");
+});
+
+test.each<[string, unknown]>([
+  ["null body", null],
+  ["scalar body", "咖啡机"],
+  ["missing product object", { ...validInput, product: undefined }],
+  ["missing marketing object", { ...validInput, marketing: undefined }],
+  ["missing direction object", { ...validInput, direction: undefined }],
+])("returns non-empty Chinese field errors for %s", async (_label, input) => {
+  const response = await POST(jsonRequest(input));
+  const body = await response.json();
+  const serializedErrors = JSON.stringify(body.fieldErrors);
+
+  expect(response.status).toBe(400);
+  expect(body.code).toBe("INVALID_INPUT");
+  expect(body.fieldErrors).toHaveProperty("body");
+  expect(body.fieldErrors).not.toEqual({});
+  expect(serializedErrors).toMatch(/[\u3400-\u9fff]/);
 });
 
 test("returns INVALID_INPUT when the request body is not valid JSON", async () => {

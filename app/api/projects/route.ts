@@ -20,10 +20,14 @@ export async function POST(request: Request) {
 
   const result = createProjectSchema.safeParse(body);
   if (!result.success) {
+    const flattenedErrors = result.error.flatten();
     return NextResponse.json(
       {
         code: "INVALID_INPUT",
-        fieldErrors: result.error.flatten().fieldErrors,
+        fieldErrors: {
+          body: flattenedErrors.formErrors,
+          ...flattenedErrors.fieldErrors,
+        },
       },
       { status: 400 },
     );

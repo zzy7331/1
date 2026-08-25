@@ -47,27 +47,51 @@ const candidateCountSchema = z.union([z.literal(1), z.literal(2), z.literal(4)],
   errorMap: () => ({ message: "候选数量必须为 1、2 或 4" }),
 });
 
-export const createProjectSchema = z.object({
-  templateVersionId: requiredText,
-  product: z.object({
-    name: requiredText,
-    category: requiredText,
-    sourceImageUrl: httpUrl,
-  }),
-  marketing: z.object({
-    benefits: benefitsSchema,
-    price: optionalText,
-    promotion: optionalText,
-    brandName: optionalText,
-  }),
-  direction: z.object({
-    style: styleSchema,
-    scene: requiredText,
-    primaryColor: z
-      .string({ invalid_type_error: "主色必须是文本" })
-      .regex(/^#[0-9A-Fa-f]{6}$/, "请输入六位十六进制颜色"),
-    candidateCount: candidateCountSchema,
-  }),
-});
+export const createProjectSchema = z.object(
+  {
+    templateVersionId: requiredText,
+    product: z.object(
+      {
+        name: requiredText,
+        category: requiredText,
+        sourceImageUrl: httpUrl,
+      },
+      {
+        required_error: "请填写商品信息",
+        invalid_type_error: "商品信息必须是对象",
+      },
+    ),
+    marketing: z.object(
+      {
+        benefits: benefitsSchema,
+        price: optionalText,
+        promotion: optionalText,
+        brandName: optionalText,
+      },
+      {
+        required_error: "请填写营销信息",
+        invalid_type_error: "营销信息必须是对象",
+      },
+    ),
+    direction: z.object(
+      {
+        style: styleSchema,
+        scene: requiredText,
+        primaryColor: z
+          .string({ invalid_type_error: "主色必须是文本" })
+          .regex(/^#[0-9A-Fa-f]{6}$/, "请输入六位十六进制颜色"),
+        candidateCount: candidateCountSchema,
+      },
+      {
+        required_error: "请选择视觉方向",
+        invalid_type_error: "视觉方向必须是对象",
+      },
+    ),
+  },
+  {
+    required_error: "请求内容不能为空",
+    invalid_type_error: "请求内容必须是对象",
+  },
+);
 
 export type CreateProjectInput = z.infer<typeof createProjectSchema>;
