@@ -8,7 +8,7 @@
 
 **Tech Stack:** Next.js 15 App Router, React 19, TypeScript 5, Tailwind CSS 4, PostgreSQL 16, Prisma 6, Zod 3, Vitest 3, Testing Library, Playwright 1.52, pnpm 10.
 
-**Spec:** `docs/superpowers/specs/2026-08-26-template-canvas-product-design.md`
+**Spec:** `docs/product-design/template-canvas-product-design.md`
 
 ## Global Constraints
 
