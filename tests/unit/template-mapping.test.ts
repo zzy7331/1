@@ -4,6 +4,7 @@ const validVersion = {
   id: "v1",
   version: 1,
   formDefinition: {
+    title: "通用商品上新素材",
     fields: [{ key: "product.name", label: "商品名称", type: "text", required: true }],
   },
   workflowDefinition: {
@@ -58,6 +59,8 @@ const validVersion = {
       layers: [],
     },
   ],
+  brandRules: { protectedAttributes: ["商品轮廓"] },
+  exportRules: { formats: ["png"] },
 };
 
 const invalidVersionOverrides: Array<[string, Record<string, unknown>]> = [
@@ -89,6 +92,8 @@ const invalidVersionOverrides: Array<[string, Record<string, unknown>]> = [
       },
     },
   ],
+  ["invalid brand rules", { brandRules: null }],
+  ["empty export rules", { exportRules: {} }],
 ];
 
 test("maps a published template to stable catalog data", () => {
@@ -123,7 +128,11 @@ test("parses a complete official template version", () => {
     workflowSteps: [{ key: "product", name: "商品信息" }],
     estimatedMinutes: 5,
     versionRequirement: "专业版",
+    brandRules: validVersion.brandRules,
+    exportRules: validVersion.exportRules,
   });
+  expect(parseTemplateVersion(validVersion)?.formDefinition).toEqual(validVersion.formDefinition);
+  expect(parseTemplateVersion(validVersion)?.boardDefinition).toEqual(validVersion.boardDefinition);
 });
 
 test("rejects a missing template version", () => {
