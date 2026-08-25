@@ -31,7 +31,7 @@ test("rejects an invalid image URL and a benefits list that is not exactly three
   expect(result.success).toBe(false);
 });
 
-test.each<Array<[unknown, string]>>([
+test.each<[unknown, string]>([
   [["轻巧", "保温"], "请填写恰好三个卖点"],
   ["轻巧、保温、耐用", "三个卖点必须使用列表格式"],
 ])("returns a Chinese error for invalid benefits %j", (benefits, expectedMessage) => {
@@ -104,7 +104,7 @@ test.each([0, 3, 5])("rejects unsupported candidate count %s", (candidateCount) 
   ).toBe(false);
 });
 
-test.each<Array<[string, Record<string, unknown>, string]>>([
+test.each<[string, Record<string, unknown>, string]>([
   ["direction.style", { style: "EDITORIAL" }, "请选择简约、生活方式或高端质感风格"],
   ["direction.candidateCount", { candidateCount: 3 }, "候选数量必须为 1、2 或 4"],
 ])("returns a Chinese error for invalid %s", (path, directionOverride, expectedMessage) => {
