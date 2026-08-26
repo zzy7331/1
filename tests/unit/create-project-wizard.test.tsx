@@ -112,9 +112,12 @@ test("shows and associates style and candidate count errors", () => {
     "direction-style-error",
   );
 
-  const candidate = screen.getByRole("radio", { name: "1 个候选" });
-  expect(candidate).toHaveAttribute("aria-invalid", "true");
-  expect(candidate).toHaveAttribute("aria-describedby", "direction-candidate-count-error");
+  const candidateGroup = screen.getByRole("group", { name: "候选数量" });
+  expect(candidateGroup).toHaveAttribute("aria-invalid", "true");
+  expect(candidateGroup).toHaveAttribute("aria-describedby", "direction-candidate-count-error");
+  expect(screen.getByRole("radio", { name: "1 个候选" })).not.toHaveAttribute(
+    "aria-invalid",
+  );
   expect(screen.getByText("候选数量必须为 1、2 或 4")).toHaveAttribute(
     "id",
     "direction-candidate-count-error",

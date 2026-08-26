@@ -15,9 +15,12 @@ export function DirectionStep({ value, errors, onChange }: DirectionStepProps) {
         视觉方向
       </h2>
 
-      <label className="block text-sm font-medium text-zinc-800">
-        视觉风格
+      <div>
+        <label htmlFor="direction-style" className="block text-sm font-medium text-zinc-800">
+          视觉风格
+        </label>
         <select
+          id="direction-style"
           value={value.style}
           onChange={(event) =>
             onChange("style", event.target.value as CreateProjectInput["direction"]["style"])
@@ -35,7 +38,7 @@ export function DirectionStep({ value, errors, onChange }: DirectionStepProps) {
             {errors.style}
           </span>
         ) : null}
-      </label>
+      </div>
 
       <label className="block text-sm font-medium text-zinc-800">
         使用场景
@@ -70,7 +73,10 @@ export function DirectionStep({ value, errors, onChange }: DirectionStepProps) {
         ) : null}
       </label>
 
-      <fieldset aria-describedby={errors.candidateCount ? "direction-candidate-count-error" : undefined}>
+      <fieldset
+        aria-invalid={Boolean(errors.candidateCount)}
+        aria-describedby={errors.candidateCount ? "direction-candidate-count-error" : undefined}
+      >
         <legend className="text-sm font-medium text-zinc-800">候选数量</legend>
         <div className="mt-2 flex flex-wrap gap-4">
           {([1, 2, 4] as const).map((count) => (
@@ -81,10 +87,6 @@ export function DirectionStep({ value, errors, onChange }: DirectionStepProps) {
                 value={count}
                 checked={value.candidateCount === count}
                 onChange={() => onChange("candidateCount", count)}
-                aria-invalid={Boolean(errors.candidateCount)}
-                aria-describedby={
-                  errors.candidateCount ? "direction-candidate-count-error" : undefined
-                }
               />
               {count} 个候选
             </label>

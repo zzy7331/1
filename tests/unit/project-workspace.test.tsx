@@ -101,7 +101,7 @@ test("uses safe Chinese placeholders when required variables are missing or malf
   );
 
   expect(screen.getAllByText("商品名称待补充").length).toBeGreaterThan(0);
-  expect(screen.getByText("卖点待补充")).toBeInTheDocument();
+  expect(screen.getAllByText("卖点待补充")).toHaveLength(2);
 });
 
 test("maps only string project variables into the read-only workspace DTO", () => {
