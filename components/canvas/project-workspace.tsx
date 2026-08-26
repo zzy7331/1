@@ -1,4 +1,4 @@
-import { BoardCard, boardPreviewScale } from "@/components/canvas/board-card";
+import { BoardCanvas, boardPreviewScale } from "@/components/canvas/board-canvas";
 import type { ProjectWorkspaceData } from "@/lib/projects/project-types";
 
 type ProjectWorkspaceProps = {
@@ -65,7 +65,7 @@ export function ProjectWorkspace({ project }: ProjectWorkspaceProps) {
             }}
           >
             {boards.map((board) => (
-              <BoardCard board={board} benefits={benefits} key={board.id} productName={productName} />
+              <BoardCanvas board={board} benefits={benefits} key={board.id} productName={productName} />
             ))}
           </section>
         </div>
