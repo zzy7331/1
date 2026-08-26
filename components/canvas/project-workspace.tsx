@@ -1,4 +1,4 @@
-import { BoardCard } from "@/components/canvas/board-card";
+import { BoardCard, boardPreviewScale } from "@/components/canvas/board-card";
 import type { ProjectWorkspaceData } from "@/lib/projects/project-types";
 
 type ProjectWorkspaceProps = {
@@ -59,7 +59,10 @@ export function ProjectWorkspace({ project }: ProjectWorkspaceProps) {
             aria-label="五画板工作区"
             className="relative bg-zinc-100"
             role="region"
-            style={{ height: `${workspaceHeight}px`, width: `${workspaceWidth}px` }}
+            style={{
+              height: `${workspaceHeight * boardPreviewScale}px`,
+              width: `${workspaceWidth * boardPreviewScale}px`,
+            }}
           >
             {boards.map((board) => (
               <BoardCard board={board} benefits={benefits} key={board.id} productName={productName} />

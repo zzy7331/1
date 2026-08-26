@@ -42,15 +42,17 @@ enum BoardKind {
 }
 
 model Template {
-  id          String         @id @default(cuid())
-  slug        String         @unique
-  name        String
-  description String
-  coverUrl    String
-  status      TemplateStatus @default(DRAFT)
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
-  versions    TemplateVersion[]
+  id                 String           @id @default(cuid())
+  slug               String           @unique
+  name               String
+  description        String
+  coverUrl           String
+  status             TemplateStatus   @default(DRAFT)
+  publishedVersionId String?          @unique
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  versions           TemplateVersion[] @relation("TemplateVersions")
+  publishedVersion   TemplateVersion? @relation("PublishedTemplateVersion", fields: [publishedVersionId], references: [id], onDelete: Restrict)
 }
 
 model TemplateVersion {
@@ -63,7 +65,8 @@ model TemplateVersion {
   brandRules         Json
   exportRules        Json
   createdAt          DateTime @default(now())
-  template           Template @relation(fields: [templateId], references: [id])
+  template           Template @relation("TemplateVersions", fields: [templateId], references: [id])
+  publishedByTemplate Template? @relation("PublishedTemplateVersion")
   projects           Project[]
 
   @@unique([templateId, version])

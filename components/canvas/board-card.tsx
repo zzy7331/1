@@ -6,19 +6,25 @@ type BoardCardProps = {
   benefits: string[];
 };
 
+export const boardPreviewScale = 0.2;
+
 export function BoardCard({ board, productName, benefits }: BoardCardProps) {
   return (
     <article
       aria-label={`${board.name}画板`}
       className="flex flex-col overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm"
       data-board-kind={board.kind}
+      data-original-height={board.height}
+      data-original-width={board.width}
+      data-original-x={board.positionX}
+      data-original-y={board.positionY}
       data-testid="marketing-board"
       style={{
-        height: `${board.height}px`,
-        left: `${board.positionX}px`,
+        height: `${board.height * boardPreviewScale}px`,
+        left: `${board.positionX * boardPreviewScale}px`,
         position: "absolute",
-        top: `${board.positionY}px`,
-        width: `${board.width}px`,
+        top: `${board.positionY * boardPreviewScale}px`,
+        width: `${board.width * boardPreviewScale}px`,
       }}
     >
       <div className="border-b border-zinc-100 px-5 py-4">

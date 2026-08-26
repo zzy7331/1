@@ -38,7 +38,7 @@ function assertNonEmptyDefinition(value: unknown): asserts value is Record<strin
 
 describe("seeded general product launch template", () => {
   beforeAll(async () => {
-    await seedOfficialTemplate();
+    await seedOfficialTemplate(prisma);
   });
 
   it("persists the five required Chinese-named boards with complete definitions", async () => {
@@ -69,15 +69,22 @@ describe("seeded general product launch template", () => {
     expect(version?.boardDefinition.every((board) => board.layers.length > 0)).toBe(true);
   });
 
-  it("leaves the immutable version unchanged when the seed runs again", async () => {
+  it("concurrently seeds one immutable v1 and publishes that exact version", async () => {
     const before = await prisma.templateVersion.findFirstOrThrow({
       where: { template: { slug: "general-product-launch" }, version: 1 },
     });
 
-    await seedOfficialTemplate();
+    await Promise.all([seedOfficialTemplate(prisma), seedOfficialTemplate(prisma)]);
 
     const after = await prisma.templateVersion.findUniqueOrThrow({ where: { id: before.id } });
+    const template = await prisma.template.findUniqueOrThrow({
+      where: { slug: "general-product-launch" },
+      include: { versions: { where: { version: 1 } } },
+    });
+
     expect(after).toEqual(before);
+    expect(template.versions).toHaveLength(1);
+    expect(template.publishedVersionId).toBe(before.id);
   });
 
   it("rejects updating or deleting an existing template version", async () => {

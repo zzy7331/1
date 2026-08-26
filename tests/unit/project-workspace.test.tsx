@@ -38,7 +38,7 @@ test("renders the initialized five-board workspace with product and benefit cont
   expect(screen.getAllByText("等待 AI 生成")).toHaveLength(5);
 });
 
-test("uses persisted coordinates and dimensions after sorting boards by position", () => {
+test("scales persisted coordinates and dimensions to a 0.2 preview after sorting boards", () => {
   const { container } = render(<ProjectWorkspace project={workspace} />);
 
   const boards = screen.getAllByTestId("marketing-board");
@@ -50,15 +50,20 @@ test("uses persisted coordinates and dimensions after sorting boards by position
     "SOCIAL_SQUARE",
   ]);
   expect(screen.getByRole("region", { name: "五画板工作区" })).toHaveStyle({
-    width: "5640px",
-    height: "1440px",
+    width: "1128px",
+    height: "288px",
   });
-  expect(container.querySelector('[data-board-kind="BENEFITS"]')).toHaveStyle({
-    left: "2240px",
+  const benefitsBoard = container.querySelector('[data-board-kind="BENEFITS"]');
+  expect(benefitsBoard).toHaveStyle({
+    left: "448px",
     top: "0px",
-    width: "1000px",
-    height: "1200px",
+    width: "200px",
+    height: "240px",
   });
+  expect(benefitsBoard).toHaveAttribute("data-original-width", "1000");
+  expect(benefitsBoard).toHaveAttribute("data-original-height", "1200");
+  expect(benefitsBoard).toHaveAttribute("data-original-x", "2240");
+  expect(benefitsBoard).toHaveAttribute("data-original-y", "0");
 });
 
 test("labels every board and keeps future actions unavailable with an explanation", () => {

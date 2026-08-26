@@ -14,7 +14,7 @@ type TemplateSummaryRow = {
   name: string;
   description: string;
   coverUrl: string;
-  latestVersion: {
+  publishedVersion: {
     id: string;
     boardDefinition: unknown[];
   };
@@ -140,8 +140,8 @@ export function mapTemplateSummary(row: TemplateSummaryRow): TemplateSummary {
     name: row.name,
     description: row.description,
     coverUrl: row.coverUrl,
-    boardCount: row.latestVersion.boardDefinition.length,
-    templateVersionId: row.latestVersion.id,
+    boardCount: row.publishedVersion.boardDefinition.length,
+    templateVersionId: row.publishedVersion.id,
   };
 }
 
@@ -149,29 +149,26 @@ export async function listPublishedTemplates(): Promise<TemplateSummary[]> {
   const templates = await prisma.template.findMany({
     where: {
       status: "PUBLISHED",
-      versions: { some: {} },
+      publishedVersionId: { not: null },
     },
     include: {
-      versions: {
-        orderBy: { version: "desc" },
-        take: 1,
-      },
+      publishedVersion: true,
     },
     orderBy: { name: "asc" },
   });
 
   return templates.flatMap((template) => {
-    const latestVersion = parseTemplateVersion(template.versions[0]);
-    if (!latestVersion) {
+    const publishedVersion = parseTemplateVersion(template.publishedVersion);
+    if (!publishedVersion) {
       return [];
     }
 
     return [
       mapTemplateSummary({
         ...template,
-        latestVersion: {
-          id: latestVersion.id,
-          boardDefinition: latestVersion.boards,
+        publishedVersion: {
+          id: publishedVersion.id,
+          boardDefinition: publishedVersion.boards,
         },
       }),
     ];
@@ -185,30 +182,27 @@ export async function getPublishedTemplate(slug: string): Promise<TemplateDetail
       status: "PUBLISHED",
     },
     include: {
-      versions: {
-        orderBy: { version: "desc" },
-        take: 1,
-      },
+      publishedVersion: true,
     },
   });
 
-  const latestVersion = parseTemplateVersion(template?.versions[0]);
-  if (!template || !latestVersion) {
+  const publishedVersion = parseTemplateVersion(template?.publishedVersion);
+  if (!template || !publishedVersion) {
     return null;
   }
 
   return {
     ...mapTemplateSummary({
       ...template,
-      latestVersion: {
-        id: latestVersion.id,
-        boardDefinition: latestVersion.boards,
+      publishedVersion: {
+        id: publishedVersion.id,
+        boardDefinition: publishedVersion.boards,
       },
     }),
-    requiredInputs: latestVersion.requiredInputs,
-    workflowSteps: latestVersion.workflowSteps,
-    boards: latestVersion.boards,
-    estimatedMinutes: latestVersion.estimatedMinutes,
-    versionRequirement: latestVersion.versionRequirement,
+    requiredInputs: publishedVersion.requiredInputs,
+    workflowSteps: publishedVersion.workflowSteps,
+    boards: publishedVersion.boards,
+    estimatedMinutes: publishedVersion.estimatedMinutes,
+    versionRequirement: publishedVersion.versionRequirement,
   };
 }

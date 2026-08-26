@@ -1,8 +1,6 @@
 import { PrismaClient, TemplateStatus } from "@prisma/client";
 import { pathToFileURL } from "node:url";
 
-const prisma = new PrismaClient();
-
 const formDefinition = {
   title: "通用商品上新素材",
   fields: [
@@ -79,31 +77,26 @@ const exportRules = {
   quality: "high",
 };
 
-export async function seedOfficialTemplate() {
-  const template = await prisma.template.upsert({
+export async function seedOfficialTemplate(client: PrismaClient) {
+  const template = await client.template.upsert({
     where: { slug: "general-product-launch" },
     update: {
       name: "通用商品上新套装",
       description: "一次生成五张营销素材",
       coverUrl: "/templates/general-product-launch.svg",
-      status: TemplateStatus.PUBLISHED,
     },
     create: {
       slug: "general-product-launch",
       name: "通用商品上新套装",
       description: "一次生成五张营销素材",
       coverUrl: "/templates/general-product-launch.svg",
-      status: TemplateStatus.PUBLISHED,
+      status: TemplateStatus.DRAFT,
     },
   });
 
-  const existingVersion = await prisma.templateVersion.findUnique({
-    where: { templateId_version: { templateId: template.id, version: 1 } },
-  });
-
-  if (!existingVersion) {
-    await prisma.templateVersion.create({
-      data: {
+  await client.templateVersion.createMany({
+    data: [
+      {
         templateId: template.id,
         version: 1,
         formDefinition,
@@ -112,17 +105,32 @@ export async function seedOfficialTemplate() {
         brandRules,
         exportRules,
       },
-    });
-  }
+    ],
+    skipDuplicates: true,
+  });
+
+  const version = await client.templateVersion.findUniqueOrThrow({
+    where: { templateId_version: { templateId: template.id, version: 1 } },
+  });
+
+  await client.template.update({
+    where: { id: template.id },
+    data: {
+      status: TemplateStatus.PUBLISHED,
+      publishedVersionId: version.id,
+    },
+  });
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  seedOfficialTemplate()
+  const client = new PrismaClient();
+
+  seedOfficialTemplate(client)
     .catch((error: unknown) => {
       console.error(error);
       process.exitCode = 1;
     })
     .finally(async () => {
-      await prisma.$disconnect();
+      await client.$disconnect();
     });
 }

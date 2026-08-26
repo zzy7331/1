@@ -66,7 +66,11 @@ export async function createProject(input: CreateProjectInput): Promise<CreatedP
       include: { template: true },
     });
 
-    if (!templateVersion || templateVersion.template.status !== TemplateStatus.PUBLISHED) {
+    if (
+      !templateVersion ||
+      templateVersion.template.status !== TemplateStatus.PUBLISHED ||
+      templateVersion.template.publishedVersionId !== templateVersion.id
+    ) {
       throw new TemplateVersionUnavailableError();
     }
 

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { PayloadTooLargeError, readBoundedJson } from "@/lib/http/read-bounded-json";
 import { createProject } from "@/lib/projects/create-project";
 import { TemplateVersionUnavailableError } from "@/lib/projects/project-errors";
 import { createProjectSchema } from "@/lib/validation/create-project-schema";
@@ -7,8 +8,12 @@ export async function POST(request: Request) {
   let body: unknown;
 
   try {
-    body = await request.json();
-  } catch {
+    body = await readBoundedJson(request);
+  } catch (error) {
+    if (error instanceof PayloadTooLargeError) {
+      return NextResponse.json({ code: "PAYLOAD_TOO_LARGE" }, { status: 413 });
+    }
+
     return NextResponse.json(
       {
         code: "INVALID_INPUT",

@@ -101,22 +101,29 @@ async function ensureTemplateFixture(options: {
     where: { templateId_version: { templateId: template.id, version: 1 } },
   });
 
-  if (existingVersion) {
-    return existingVersion;
-  }
-
   const boards = officialVersion.boardDefinition as Prisma.JsonArray;
-  return prisma.templateVersion.create({
-    data: {
-      templateId: template.id,
-      version: 1,
-      formDefinition: officialVersion.formDefinition as Prisma.InputJsonValue,
-      workflowDefinition: officialVersion.workflowDefinition as Prisma.InputJsonValue,
-      boardDefinition: (options.invalidDefinition ? boards.slice(0, 4) : boards) as Prisma.InputJsonValue,
-      brandRules: officialVersion.brandRules as Prisma.InputJsonValue,
-      exportRules: officialVersion.exportRules as Prisma.InputJsonValue,
-    },
+  const version =
+    existingVersion ??
+    (await prisma.templateVersion.create({
+      data: {
+        templateId: template.id,
+        version: 1,
+        formDefinition: officialVersion.formDefinition as Prisma.InputJsonValue,
+        workflowDefinition: officialVersion.workflowDefinition as Prisma.InputJsonValue,
+        boardDefinition: (options.invalidDefinition
+          ? boards.slice(0, 4)
+          : boards) as Prisma.InputJsonValue,
+        brandRules: officialVersion.brandRules as Prisma.InputJsonValue,
+        exportRules: officialVersion.exportRules as Prisma.InputJsonValue,
+      },
+    }));
+
+  await prisma.template.update({
+    where: { id: template.id },
+    data: { publishedVersionId: version.id },
   });
+
+  return version;
 }
 
 function jsonRequest(body: unknown) {
@@ -128,7 +135,7 @@ function jsonRequest(body: unknown) {
 }
 
 beforeAll(async () => {
-  await seedOfficialTemplate();
+  await seedOfficialTemplate(prisma);
   const version = await prisma.templateVersion.findFirstOrThrow({
     where: { template: { slug: "general-product-launch" }, version: 1 },
     include: { template: true },

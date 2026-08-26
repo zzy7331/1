@@ -103,7 +103,7 @@ test("maps a published template to stable catalog data", () => {
     name: "通用商品上新套装",
     description: "一次生成五张营销素材",
     coverUrl: "/templates/general.webp",
-    latestVersion: {
+    publishedVersion: {
       id: "v1",
       boardDefinition: [{}, {}, {}, {}, {}],
     },
