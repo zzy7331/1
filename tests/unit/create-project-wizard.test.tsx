@@ -220,7 +220,7 @@ test("does not advance while the current step is invalid", () => {
   fireEvent.click(screen.getByRole("button", { name: "下一步" }));
 
   expect(screen.getByText("第 1 步，共 3 步")).toBeInTheDocument();
-  expect(screen.getAllByText("此项不能为空").length).toBeGreaterThan(0);
+  expect(screen.getByText("商品名称不能为空")).toBeInTheDocument();
   expect(screen.queryByRole("heading", { name: "营销信息" })).not.toBeInTheDocument();
 });
 
